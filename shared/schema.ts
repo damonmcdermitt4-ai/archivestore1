@@ -18,7 +18,7 @@ export const products = pgTable("products", {
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  buyerId: text("buyer_id").notNull().references(() => users.id),
+  buyerId: text("buyer_id").notNull(), // Allow "guest" or user ID
   sellerId: text("seller_id").notNull().references(() => users.id),
   productId: integer("product_id").notNull().references(() => products.id),
   amount: integer("amount").notNull(), // in cents

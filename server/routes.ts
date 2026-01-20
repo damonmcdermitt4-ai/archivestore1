@@ -46,7 +46,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post(api.transactions.create.path, isAuthenticated, async (req: any, res) => {
+  app.post(api.transactions.create.path, async (req: any, res) => {
     try {
       const { productId } = req.body;
       const product = await storage.getProduct(productId);
@@ -59,12 +59,14 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Product already sold" });
       }
 
-      if (product.sellerId === req.user.claims.sub) {
+      // If logged in, prevent buying own product. 
+      // If not logged in, we allow the purchase (guest checkout).
+      if (req.isAuthenticated() && product.sellerId === req.user.claims.sub) {
          return res.status(400).json({ message: "Cannot buy your own product" });
       }
 
       const transaction = await storage.createTransaction({
-        buyerId: req.user.claims.sub,
+        buyerId: req.isAuthenticated() ? req.user.claims.sub : "guest",
         sellerId: product.sellerId,
         productId,
         amount: product.price,
