@@ -79,49 +79,7 @@ export async function registerRoutes(
   });
 
   async function seedDatabase() {
-    const existingUsers = await db.select().from(users).limit(1);
-    let sellerId = existingUsers[0]?.id;
-
-    if (!sellerId) {
-      const [user] = await db.insert(users).values({
-        email: "demo@example.com",
-        firstName: "Demo",
-        lastName: "Seller",
-      }).returning();
-      sellerId = user.id;
-    }
-
-    const existingProducts = await storage.getProducts();
-    if (existingProducts.length === 0) {
-      await storage.createProduct({
-        sellerId,
-        title: "Vintage Denim Jacket",
-        description: "Authentic 90s denim jacket, slightly distressed. Size M.",
-        price: 4500, // $45.00
-        imageUrl: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "Retro Film Camera",
-        description: "Fully functional 35mm film camera. Comes with strap.",
-        price: 12000, // $120.00
-        imageUrl: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "Leather Boots",
-        description: "Handmade leather boots, barely worn. Size 10.",
-        price: 8500, // $85.00
-        imageUrl: "https://images.unsplash.com/photo-1542841791-1925b02a2bbb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "Abstract Canvas Art",
-        description: "Original acrylic painting on canvas. 24x36 inches.",
-        price: 15000, // $150.00
-        imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb39279c0f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      });
-    }
+    // Seeding disabled as per user request to take away listings
   }
 
   await seedDatabase();
