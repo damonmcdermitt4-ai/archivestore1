@@ -81,7 +81,42 @@ export async function registerRoutes(
   });
 
   async function seedDatabase() {
-    // Seeding disabled as per user request to take away listings
+    const existingUsers = await db.select().from(users).limit(1);
+    let sellerId = existingUsers[0]?.id;
+
+    if (!sellerId) {
+      const [user] = await db.insert(users).values({
+        email: "guest@example.com",
+        firstName: "Avant",
+        lastName: "Garde",
+      }).returning();
+      sellerId = user.id;
+    }
+
+    const existingProducts = await storage.getProducts();
+    if (existingProducts.length === 0) {
+      await storage.createProduct({
+        sellerId,
+        title: "DRIES VAN NOTEN",
+        description: "Purple Sequinned Shirt. Editorial piece from archive.",
+        price: 124000, // $1240.00
+        imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&auto=format&fit=crop&q=60",
+      });
+      await storage.createProduct({
+        sellerId,
+        title: "RICK OWENS",
+        description: "Black Satin Shirt. Iconic silhouette.",
+        price: 67000, // $670.00
+        imageUrl: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&auto=format&fit=crop&q=60",
+      });
+      await storage.createProduct({
+        sellerId,
+        title: "MAISON MARGIELA",
+        description: "Tabi Leather Boots. Signature split-toe design.",
+        price: 85000, // $850.00
+        imageUrl: "https://images.unsplash.com/photo-1638247025967-b4e38f6893b4?w=800&auto=format&fit=crop&q=60",
+      });
+    }
   }
 
   await seedDatabase();

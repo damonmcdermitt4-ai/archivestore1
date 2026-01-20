@@ -5,57 +5,54 @@
 @tailwind utilities;
 
 :root {
-  /* Modern Fashion Marketplace Palette - High Contrast */
+  /* Avant-Garde Minimalist Palette */
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
 
   --background: 0 0% 100%;
   --foreground: 0 0% 0%;
 
-  /* Vibrant Red Accent - Depop-esque energy */
-  --primary: 350 89% 60%;
-  --primary-foreground: 0 0% 100%;
+  /* High Contrast Acid Yellow Accent */
+  --primary: 64 88% 54%;
+  --primary-foreground: 0 0% 0%;
 
   --secondary: 0 0% 96%;
   --secondary-foreground: 0 0% 0%;
 
-  --muted: 0 0% 96%;
+  --muted: 0 0% 98%;
   --muted-foreground: 0 0% 45%;
 
-  --accent: 0 0% 96%;
-  --accent-foreground: 0 0% 9%;
+  --accent: 64 88% 54%;
+  --accent-foreground: 0 0% 0%;
 
   --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
-  --ring: 350 89% 60%;
-  --radius: 0.5rem;
+  --border: 0 0% 0%; /* Stark Black Borders */
+  --input: 0 0% 0%;
+  --ring: 64 88% 54%;
+  --radius: 0rem; /* Sharp edges for avant-garde feel */
 }
 
 .dark {
-  --background: 0 0% 3%;
-  --foreground: 0 0% 98%;
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
 
-  --primary: 350 89% 60%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 64 88% 54%;
+  --primary-foreground: 0 0% 0%;
 
   --secondary: 0 0% 10%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary-foreground: 0 0% 100%;
 
   --muted: 0 0% 10%;
   --muted-foreground: 0 0% 60%;
 
-  --accent: 0 0% 10%;
-  --accent-foreground: 0 0% 98%;
+  --accent: 64 88% 54%;
+  --accent-foreground: 0 0% 0%;
 
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 350 89% 60%;
+  --border: 0 0% 100%;
+  --input: 0 0% 100%;
+  --ring: 64 88% 54%;
 }
 
 @layer base {
