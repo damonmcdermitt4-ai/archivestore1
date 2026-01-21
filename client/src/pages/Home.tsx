@@ -64,7 +64,14 @@ export default function Home() {
 
       <main id="feed" className="container mx-auto px-4">
         <div className="flex items-baseline justify-between mb-8">
-          <h2 className="text-3xl font-display font-bold">Fresh on the feed</h2>
+          <div className="flex items-baseline gap-6">
+            <h2 className="text-3xl font-display font-bold">Fresh on the feed</h2>
+            <Link href="/sell">
+              <span className="text-sm font-medium tracking-widest uppercase cursor-pointer hover:opacity-70 transition-opacity border-b border-foreground pb-0.5">
+                Post Listing +
+              </span>
+            </Link>
+          </div>
           <Button variant="link" className="text-muted-foreground hover:text-foreground">
             View all <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
