@@ -21,7 +21,7 @@ export function Navbar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <span className="font-display font-bold text-2xl tracking-tight">SSENSE.</span>
+          <span className="font-display font-bold text-2xl tracking-tight uppercase">ARCHIVE COMMODITIES.</span>
         </Link>
 
         {/* Search Bar - Editorial Minimalist Style */}
@@ -87,8 +87,8 @@ export function Navbar() {
                 </Button>
               </a>
               <a href="/api/login">
-                <Button className="font-medium rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
-                  Sign up
+                <Button className="font-medium rounded-none bg-foreground text-background hover:bg-foreground/90 transition-all border border-foreground">
+                  SIGN UP
                 </Button>
               </a>
             </div>
