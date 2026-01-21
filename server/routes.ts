@@ -97,24 +97,24 @@ export async function registerRoutes(
     if (existingProducts.length === 0) {
       await storage.createProduct({
         sellerId,
-        title: "DRIES VAN NOTEN",
-        description: "Purple Sequinned Shirt. Editorial piece from archive.",
-        price: 124000, // $1240.00
-        imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&auto=format&fit=crop&q=60",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "RICK OWENS",
-        description: "Black Satin Shirt. Iconic silhouette.",
-        price: 67000, // $670.00
-        imageUrl: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&auto=format&fit=crop&q=60",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "MAISON MARGIELA",
-        description: "Tabi Leather Boots. Signature split-toe design.",
+        title: "LGB BONO",
+        description: "Iconic military-inspired Bono jacket by Le Grand Bleu. Distressed detailing and complex construction.",
         price: 85000, // $850.00
-        imageUrl: "https://images.unsplash.com/photo-1638247025967-b4e38f6893b4?w=800&auto=format&fit=crop&q=60",
+        imageUrl: "/images/lgb_bono.png",
+      });
+      await storage.createProduct({
+        sellerId,
+        title: "PILOT JACKET",
+        description: "Customized pilot jacket with multi-pocket detailing and avant-garde silhouette.",
+        price: 65000, // $650.00
+        imageUrl: "/images/pilot_jacket.png",
+      });
+      await storage.createProduct({
+        sellerId,
+        title: "LGB RIDERS JACKET",
+        description: "Minimalist black riders jacket by Le Grand Bleu. Asymmetric zip and slim silhouette.",
+        price: 75000, // $750.00
+        imageUrl: "/images/lgb_riders.png",
       });
     }
   }
