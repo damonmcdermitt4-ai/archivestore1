@@ -34,47 +34,24 @@ export default function Home() {
 
   // Hero section for visual impact
   const Hero = () => (
-    <div className="relative bg-black text-white py-20 px-4 overflow-hidden mb-12 rounded-3xl mx-4 mt-4">
-      <div className="absolute inset-0 opacity-40">
-        {/* Abstract background */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-600 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
-      </div>
-      
+    <div className="relative bg-background text-foreground py-12 px-4 overflow-hidden mb-12 mx-4 mt-4 border-b border-foreground/10">
       <div className="relative container mx-auto text-center max-w-3xl space-y-6">
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-5xl md:text-7xl font-display font-bold tracking-tighter leading-none"
+          className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-none uppercase"
         >
-          Buy. Sell. <br/><span className="text-primary">Repeat.</span>
+          Curated <br/>Editorial
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-lg md:text-xl text-gray-300 font-light max-w-xl mx-auto"
+          className="text-sm md:text-base text-muted-foreground font-light max-w-xl mx-auto tracking-widest uppercase"
         >
-          The marketplace for unique style. Discover vintage, streetwear, and handmade pieces from our community.
+          Avant-Garde. Minimalist. Editorial.
         </motion.p>
-        <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5, delay: 0.2 }}
-           className="flex justify-center gap-4 pt-4"
-        >
-          <a href="#feed">
-            <Button size="lg" className="rounded-full text-base font-medium px-8 h-12">
-              Start Exploring
-            </Button>
-          </a>
-          <Link href="/sell">
-            <Button size="lg" variant="outline" className="rounded-full text-base font-medium px-8 h-12 bg-transparent text-white border-white hover:bg-white hover:text-black">
-              Sell Now
-            </Button>
-          </Link>
-        </motion.div>
       </div>
     </div>
   );

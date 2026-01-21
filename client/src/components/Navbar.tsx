@@ -21,20 +21,17 @@ export function Navbar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="bg-primary text-primary-foreground p-1.5 rounded-lg transform group-hover:rotate-12 transition-transform duration-300">
-            <ShoppingBag className="w-5 h-5" />
-          </div>
-          <span className="font-display font-bold text-2xl tracking-tight">Thrift.</span>
+          <span className="font-display font-bold text-2xl tracking-tight">SSENSE.</span>
         </Link>
 
-        {/* Search Bar - Hidden on mobile, visible on tablet+ */}
-        <div className="hidden md:flex items-center flex-1 max-w-md mx-8 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        {/* Search Bar - Editorial Minimalist Style */}
+        <div className="flex items-center flex-1 max-w-xl mx-8 relative">
           <input 
             type="text"
-            placeholder="Search for items..."
-            className="w-full h-10 pl-10 pr-4 rounded-full bg-secondary border-none focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-sm font-medium"
+            placeholder="SEARCH"
+            className="w-full h-10 border-b border-foreground bg-transparent focus:outline-none transition-all text-sm font-medium tracking-widest placeholder:text-muted-foreground/50"
           />
+          <Search className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
         </div>
 
         {/* Actions */}
