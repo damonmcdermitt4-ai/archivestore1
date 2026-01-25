@@ -67,8 +67,17 @@ Preferred communication style: Simple, everyday language.
 - **shadcn/ui**: Pre-styled component library (new-york style variant)
 - **Lucide React**: Icon library
 
+### Shipping Integration
+- **Provider**: Shippo API for shipping rates and label generation
+- **Package Sizes**: small (T-shirts, 1 lb), medium (hoodies, 3 lb), large (coats, 5 lb)
+- **Shipping Options**: Buyer pays or seller pays (free shipping)
+- **Label Generation**: Automatic shipping label creation after successful checkout
+- **Mock Mode**: Falls back to mock shipping rates when SHIPPO_API_KEY not configured
+- **Implementation**: `server/shippoClient.ts` handles rate fetching and label purchase
+
 ### Environment Variables Required
 - `DATABASE_URL`: PostgreSQL connection string
 - `SESSION_SECRET`: Secret for session encryption
 - `REPL_ID`: Replit environment identifier (auto-provided)
+- `SHIPPO_API_KEY`: Shippo API key for shipping labels (optional - mock mode if not set)
 - Stripe credentials via Replit Connectors

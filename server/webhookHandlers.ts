@@ -1,8 +1,12 @@
 import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 import Stripe from 'stripe';
-import { createShipmentAndPurchaseLabel, type ShippingAddress } from './shippoClient';
+import { createShipmentAndPurchaseLabel, getEstimatedShippingCost, type ShippingAddress } from './shippoClient';
 import { type PackageSize } from '@shared/schema';
+
+function getExpectedShippingCost(packageSize: PackageSize): number {
+  return getEstimatedShippingCost(packageSize);
+}
 
 // Shared fulfillment logic used by both webhook and /api/checkout/complete
 export async function fulfillCheckout(sessionId: string): Promise<{ success: boolean; transaction?: any; error?: string }> {
@@ -40,8 +44,17 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     return { success: false, error: 'Product already sold' };
   }
   
-  // Calculate expected amount (price + fee + shipping)
+  // Validate shipping cost against product's current settings
   const shippingCost = parseInt(shippingCostStr, 10);
+  const expectedShippingCost = product.shippingPaidBy === 'buyer' 
+    ? getExpectedShippingCost(packageSize)
+    : 0;
+  
+  if (shippingCost !== expectedShippingCost) {
+    return { success: false, error: `Shipping cost mismatch: expected ${expectedShippingCost}, got ${shippingCost}` };
+  }
+  
+  // Calculate expected amount (price + fee + shipping)
   const expectedAmount = product.price + 100 + shippingCost;
   if (session.amount_total !== expectedAmount) {
     return { success: false, error: `Amount mismatch: expected ${expectedAmount}, got ${session.amount_total}` };

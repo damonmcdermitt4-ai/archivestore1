@@ -22,8 +22,8 @@ export default function ProductDetails() {
     shippingPaidBy: string;
     packageSize: PackageSize;
   }>({
-    queryKey: ['/api/shipping/estimate', id],
-    enabled: !!product,
+    queryKey: [`/api/shipping/estimate/${id}`],
+    enabled: !!product && id > 0,
   });
 
   if (isLoading) {

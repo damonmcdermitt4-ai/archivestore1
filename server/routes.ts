@@ -110,7 +110,7 @@ export async function registerRoutes(
   // Create Stripe Checkout Session for a product
   app.post('/api/checkout', async (req: any, res) => {
     try {
-      const { productId, shippingRateId } = req.body;
+      const { productId } = req.body;
       const product = await storage.getProduct(productId);
       
       if (!product) {
