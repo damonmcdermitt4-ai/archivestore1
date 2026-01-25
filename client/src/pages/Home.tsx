@@ -1,13 +1,24 @@
+import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { useProducts } from "@/hooks/use-products";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+type SortOption = "new" | "recommended";
 
 export default function Home() {
   const { data: products, isLoading, error } = useProducts();
+  const [showAll, setShowAll] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("new");
 
   if (isLoading) {
     return (
@@ -32,26 +43,28 @@ export default function Home() {
     );
   }
 
-  // Hero section for visual impact
+  const sortedProducts = [...(products || [])].sort((a: any, b: any) => {
+    if (sortBy === "new") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    } else {
+      return b.price - a.price;
+    }
+  });
+
+  const displayProducts = showAll ? sortedProducts : sortedProducts.slice(0, 8);
+
   const Hero = () => (
-    <div className="relative bg-background text-foreground py-12 px-4 overflow-hidden mb-12 mx-4 mt-4 border-b border-foreground/10">
-      <div className="relative container mx-auto text-center max-w-3xl space-y-6">
+    <div className="relative bg-background text-foreground py-16 px-4 overflow-hidden mb-12 mx-4 mt-4 border-b border-foreground/10">
+      <div className="relative container mx-auto text-center max-w-4xl space-y-4">
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-4xl md:text-6xl font-display font-bold tracking-tighter leading-none uppercase"
+          className="text-3xl md:text-5xl lg:text-6xl font-display font-bold tracking-[0.2em] leading-tight uppercase"
+          data-testid="text-hero-title"
         >
-          Curated <br/>Editorial
+          Official Archive <br className="hidden sm:block" />Marketplace
         </motion.h1>
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-sm md:text-base text-muted-foreground font-light max-w-xl mx-auto tracking-widest uppercase"
-        >
-          Avant-Garde. Minimalist. Editorial.
-        </motion.p>
       </div>
     </div>
   );
@@ -63,28 +76,72 @@ export default function Home() {
       <Hero />
 
       <main id="feed" className="container mx-auto px-4">
-        <div className="flex items-baseline justify-between mb-8">
+        <div className="flex items-baseline justify-between mb-8 flex-wrap gap-4">
           <div className="flex items-baseline gap-6">
             <h2 className="text-3xl font-display font-bold">Listings</h2>
             <Link href="/sell">
-              <span className="text-sm font-medium tracking-widest uppercase cursor-pointer hover:opacity-70 transition-opacity border-b border-foreground pb-0.5">
+              <span className="text-sm font-medium tracking-widest uppercase cursor-pointer hover:opacity-70 transition-opacity border-b border-foreground pb-0.5" data-testid="link-post-listing">
                 Post Listing +
               </span>
             </Link>
           </div>
-          <Button variant="link" className="text-muted-foreground hover:text-foreground">
-            View all <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
+          
+          {!showAll ? (
+            <Button 
+              variant="ghost" 
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setShowAll(true)}
+              data-testid="button-view-all"
+            >
+              View all <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          ) : (
+            <div className="flex items-center gap-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2" data-testid="button-sort">
+                    {sortBy === "new" ? "NEW" : "RECOMMENDED"}
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={() => setSortBy("new")}
+                    className={sortBy === "new" ? "font-bold" : ""}
+                    data-testid="sort-option-new"
+                  >
+                    NEW
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setSortBy("recommended")}
+                    className={sortBy === "recommended" ? "font-bold" : ""}
+                    data-testid="sort-option-recommended"
+                  >
+                    RECOMMENDED
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Button 
+                variant="ghost" 
+                className="text-muted-foreground hover:text-foreground text-sm"
+                onClick={() => setShowAll(false)}
+                data-testid="button-show-less"
+              >
+                Show less
+              </Button>
+            </div>
+          )}
         </div>
 
-        {products && products.length > 0 ? (
+        {displayProducts && displayProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
-            {products.map((product: any) => (
+            {displayProducts.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-secondary/50 rounded-2xl border border-dashed border-border">
+          <div className="text-center py-20 bg-secondary/50 border border-dashed border-border">
             <p className="text-xl font-medium text-muted-foreground">No items found yet.</p>
             <p className="text-sm text-muted-foreground mt-2">Be the first to list something!</p>
             <Link href="/sell">

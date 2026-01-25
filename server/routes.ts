@@ -20,7 +20,13 @@ export async function registerRoutes(
 
   app.get(api.products.list.path, async (req, res) => {
     const products = await storage.getProducts();
-    res.json(products);
+    const productsWithSellers = await Promise.all(
+      products.map(async (product) => {
+        const seller = await storage.getUser(product.sellerId);
+        return { ...product, seller };
+      })
+    );
+    res.json(productsWithSellers);
   });
 
   app.get(api.products.get.path, async (req, res) => {
@@ -28,7 +34,35 @@ export async function registerRoutes(
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    res.json(product);
+    const seller = await storage.getUser(product.sellerId);
+    res.json({ ...product, seller });
+  });
+
+  // Get products by seller
+  app.get('/api/sellers/:id/products', async (req, res) => {
+    try {
+      const products = await storage.getProductsBySeller(req.params.id);
+      const seller = await storage.getUser(req.params.id);
+      const productsWithSeller = products.map(product => ({ ...product, seller }));
+      res.json(productsWithSeller);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get seller products' });
+    }
+  });
+
+  // Get seller profile
+  app.get('/api/sellers/:id', async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: 'Seller not found' });
+      }
+      res.json(user);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get seller' });
+    }
   });
 
   app.post(api.products.create.path, isAuthenticated, async (req: any, res) => {

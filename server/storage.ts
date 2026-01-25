@@ -14,6 +14,7 @@ import { authStorage } from "./replit_integrations/auth/storage";
 export interface IStorage {
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
+  getProductsBySeller(sellerId: string): Promise<Product[]>;
   createProduct(product: InsertProduct & { sellerId: string }): Promise<Product>;
   createTransaction(transaction: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string, shippingCost?: number }): Promise<Transaction>;
   getTransactionByStripeSession(stripeSessionId: string): Promise<Transaction | undefined>;
@@ -29,6 +30,10 @@ export class DatabaseStorage implements IStorage {
   async getProduct(id: number): Promise<Product | undefined> {
     const [product] = await db.select().from(products).where(eq(products.id, id));
     return product;
+  }
+
+  async getProductsBySeller(sellerId: string): Promise<Product[]> {
+    return await db.select().from(products).where(eq(products.sellerId, sellerId)).orderBy(desc(products.createdAt));
   }
 
   async createProduct(product: InsertProduct & { sellerId: string }): Promise<Product> {

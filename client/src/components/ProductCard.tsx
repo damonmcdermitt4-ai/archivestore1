@@ -49,15 +49,20 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
              {product.seller && (
-               <>
+               <Link 
+                 href={`/sellers/${product.sellerId}`} 
+                 className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+                 onClick={(e) => e.stopPropagation()}
+                 data-testid={`link-seller-${product.sellerId}`}
+               >
                  <Avatar className="w-5 h-5">
                    <AvatarImage src={product.seller.profileImageUrl} />
                    <AvatarFallback className="text-[10px]">{product.seller.firstName[0]}</AvatarFallback>
                  </Avatar>
-                 <span className="truncate max-w-[100px] text-xs">
+                 <span className="truncate max-w-[100px] text-xs underline-offset-2 hover:underline">
                    @{product.seller.firstName.toLowerCase()}
                  </span>
-               </>
+               </Link>
              )}
           </div>
           <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">

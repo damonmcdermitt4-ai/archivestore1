@@ -123,16 +123,20 @@ export default function ProductDetails() {
 
             {/* Seller Info */}
             {product.seller && (
-              <div className="flex items-center p-4 rounded-xl bg-secondary/50 border border-border">
+              <a 
+                href={`/sellers/${product.sellerId}`}
+                className="flex items-center p-4 bg-secondary/50 border border-border hover:bg-secondary transition-colors"
+                data-testid="link-seller-profile"
+              >
                 <Avatar className="h-12 w-12 border-2 border-background mr-4">
                   <AvatarImage src={product.seller.profileImageUrl} />
-                  <AvatarFallback>{product.seller.firstName[0]}</AvatarFallback>
+                  <AvatarFallback>{product.seller.firstName?.[0] || 'S'}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-bold text-sm">@{product.seller.firstName}</p>
-                  <p className="text-xs text-muted-foreground">Active today • 5 stars</p>
+                <div className="flex-1">
+                  <p className="font-bold text-sm" data-testid="text-seller-handle">@{product.seller.firstName?.toLowerCase() || 'seller'}</p>
+                  <p className="text-xs text-muted-foreground">View all listings</p>
                 </div>
-              </div>
+              </a>
             )}
 
             {/* Actions */}
