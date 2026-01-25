@@ -1,14 +1,16 @@
 import { useRoute } from "wouter";
 import { useProduct } from "@/hooks/use-products";
 import { useCreateTransaction } from "@/hooks/use-transactions";
+import { useFavorites, useToggleFavorite } from "@/hooks/use-favorites";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ShieldCheck, Truck, RefreshCw, Package } from "lucide-react";
+import { Loader2, ShieldCheck, Truck, RefreshCw, Package, Heart } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
 import { PACKAGE_SIZES, CONDITION_OPTIONS, type PackageSize, type Condition } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductDetails() {
   const [, params] = useRoute("/products/:id");
@@ -16,6 +18,36 @@ export default function ProductDetails() {
   const { data: product, isLoading } = useProduct(id);
   const { mutate: buy, isPending } = useCreateTransaction();
   const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const { data: favorites } = useFavorites(!!user);
+  const { toggle: toggleFavorite, isPending: isFavoritePending } = useToggleFavorite();
+  
+  const { data: likeData } = useQuery<{ count: number }>({
+    queryKey: ['/api/products', id, 'likes'],
+    queryFn: async () => {
+      const res = await fetch(`/api/products/${id}/likes`);
+      if (!res.ok) throw new Error('Failed to fetch like count');
+      return res.json();
+    },
+    enabled: id > 0,
+  });
+  
+  const favoritesArray = (user && favorites) ? favorites as any[] : [];
+  const isFavorited = favoritesArray?.some((fav: any) => fav.productId === id) || false;
+  const likeCount = likeData?.count || 0;
+  
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please log in to save items to your favorites",
+        variant: "destructive",
+      });
+      return;
+    }
+    await toggleFavorite(id, isFavorited);
+  };
 
   const { data: shippingEstimate } = useQuery<{
     estimatedCost: number;
@@ -79,10 +111,29 @@ export default function ProductDetails() {
           {/* Right Column: Details */}
           <div className="flex flex-col h-full space-y-8">
             <div className="space-y-4">
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start gap-4">
                 <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-foreground">
                   {product.title}
                 </h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleToggleFavorite}
+                  disabled={isFavoritePending}
+                  className="gap-2"
+                  data-testid="button-favorite"
+                >
+                  <Heart 
+                    className={`w-5 h-5 transition-colors ${
+                      isFavorited 
+                        ? "fill-foreground text-foreground" 
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                  <span className="text-sm font-medium text-muted-foreground" data-testid="text-like-count">
+                    {likeCount}
+                  </span>
+                </Button>
               </div>
               
               <div className="text-3xl font-medium text-foreground">

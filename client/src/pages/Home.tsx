@@ -4,15 +4,9 @@ import { ProductCard } from "@/components/ProductCard";
 import { useProducts } from "@/hooks/use-products";
 import { useProductsWithLikes } from "@/hooks/use-favorites";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowRight, ChevronDown } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type SortOption = "new" | "recommended";
 
@@ -95,42 +89,47 @@ export default function Home() {
             </Link>
           </div>
           
-          {!showAll ? (
-            <Button 
-              variant="ghost" 
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => setShowAll(true)}
-              data-testid="button-view-all"
-            >
-              View all <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          ) : (
-            <div className="flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2" data-testid="button-sort">
-                    {sortBy === "new" ? "NEW" : "RECOMMENDED"}
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
-                    onClick={() => setSortBy("new")}
-                    className={sortBy === "new" ? "font-bold" : ""}
-                    data-testid="sort-option-new"
-                  >
-                    NEW
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setSortBy("recommended")}
-                    className={sortBy === "recommended" ? "font-bold" : ""}
-                    data-testid="sort-option-recommended"
-                  >
-                    RECOMMENDED
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSortBy("new")}
+                className={`text-sm font-medium uppercase tracking-widest ${
+                  sortBy === "new" 
+                    ? "text-foreground border-b-2 border-foreground rounded-none" 
+                    : "text-muted-foreground"
+                }`}
+                data-testid="sort-option-new"
+              >
+                New
+              </Button>
+              <span className="text-muted-foreground" data-testid="sort-separator">/</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSortBy("recommended")}
+                className={`text-sm font-medium uppercase tracking-widest ${
+                  sortBy === "recommended" 
+                    ? "text-foreground border-b-2 border-foreground rounded-none" 
+                    : "text-muted-foreground"
+                }`}
+                data-testid="sort-option-recommended"
+              >
+                Recommended
+              </Button>
+            </div>
+            
+            {!showAll ? (
+              <Button 
+                variant="ghost" 
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setShowAll(true)}
+                data-testid="button-view-all"
+              >
+                View all <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            ) : (
               <Button 
                 variant="ghost" 
                 className="text-muted-foreground hover:text-foreground text-sm"
@@ -139,8 +138,8 @@ export default function Home() {
               >
                 Show less
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {displayProducts && displayProducts.length > 0 ? (

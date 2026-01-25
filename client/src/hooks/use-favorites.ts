@@ -1,9 +1,10 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
-export function useFavorites() {
+export function useFavorites(enabled: boolean = true) {
   return useQuery({
     queryKey: ["/api/favorites"],
+    enabled,
   });
 }
 
@@ -18,12 +19,13 @@ export function useAddFavorite() {
   return useMutation({
     mutationFn: async (productId: number) => {
       const res = await apiRequest("POST", `/api/favorites/${productId}`);
-      return res.json();
+      return { ...(await res.json()), productId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products/with-likes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products", data.productId, "likes"] });
     },
   });
 }
@@ -32,12 +34,13 @@ export function useRemoveFavorite() {
   return useMutation({
     mutationFn: async (productId: number) => {
       const res = await apiRequest("DELETE", `/api/favorites/${productId}`);
-      return res.json();
+      return { ...(await res.json()), productId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products/with-likes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products", data.productId, "likes"] });
     },
   });
 }
