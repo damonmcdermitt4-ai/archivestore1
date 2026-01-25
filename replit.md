@@ -51,6 +51,7 @@ Preferred communication style: Simple, everyday language.
 3. **Guest Checkout**: Users can purchase without logging in
 4. **Shipping Integration**: Package size selection, buyer/seller pays options, auto-generated labels
 5. **Platform Fee**: $1 fee added to each transaction
+6. **Favorites System**: Logged-in users can heart items to save them; view all favorites at `/favorites`; recommended sorting boosts items with more likes
 
 ## External Dependencies
 
