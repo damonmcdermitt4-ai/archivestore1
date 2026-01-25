@@ -53,13 +53,42 @@ export default function Home() {
 
   const displayProducts = showAll ? sortedProducts : sortedProducts.slice(0, 8);
 
+  const brands = [
+    "14th addiction", "20471120", "OLD CURIOSITY SHOP",
+    "YASUYUKI ISHII", "beauty:beast", "KMRii",
+    "ifsixwasnine", "L.G.B.", "HYSTERIC GLAMOUR",
+    "UNDERCOVER", "number (N)ine", "JUNYA WATANABE",
+    "craig morrison", "ISSEY MIYAKE", "PPFM",
+    "tornadomart", "SHARE SPIRIT", "semantic design"
+  ];
+
   const Hero = () => (
-    <div className="relative bg-background text-foreground py-16 px-4 overflow-hidden mb-12 mx-4 mt-4 border-b border-foreground/10">
-      <div className="relative container mx-auto text-center max-w-4xl space-y-4">
+    <div className="relative bg-background text-foreground py-12 px-4 overflow-hidden mb-12 mx-4 mt-4 border-b border-foreground/10">
+      <div className="relative container mx-auto text-center max-w-5xl space-y-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-muted-foreground/40"
+        >
+          {brands.map((brand, i) => (
+            <span 
+              key={i} 
+              className="text-sm md:text-base lg:text-lg font-display tracking-wide whitespace-nowrap"
+              style={{ 
+                fontWeight: Math.random() > 0.5 ? 400 : 600,
+                fontSize: `${0.75 + Math.random() * 0.5}rem`
+              }}
+            >
+              {brand}
+            </span>
+          ))}
+        </motion.div>
+        
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
           className="text-3xl md:text-5xl lg:text-6xl font-display font-bold tracking-[0.2em] leading-tight uppercase"
           data-testid="text-hero-title"
         >
