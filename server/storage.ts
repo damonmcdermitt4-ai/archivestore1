@@ -15,8 +15,8 @@ export interface IStorage {
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: InsertProduct & { sellerId: string }): Promise<Product>;
-  createTransaction(transaction: InsertTransaction & { buyerId: string, fee: number, amount: number }): Promise<Transaction>;
-  // Auth methods from authStorage
+  createTransaction(transaction: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string }): Promise<Transaction>;
+  getTransactionByStripeSession(stripeSessionId: string): Promise<Transaction | undefined>;
   getUser(id: string): Promise<any>; 
 }
 
@@ -35,19 +35,21 @@ export class DatabaseStorage implements IStorage {
     return newProduct;
   }
 
-  async createTransaction(data: InsertTransaction & { buyerId: string, fee: number, amount: number }): Promise<Transaction> {
-    // Start a transaction
+  async createTransaction(data: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string }): Promise<Transaction> {
     return await db.transaction(async (tx) => {
-      // Create transaction record
       const [transaction] = await tx.insert(transactions).values(data).returning();
       
-      // Mark product as sold
       await tx.update(products)
         .set({ sold: true })
         .where(eq(products.id, data.productId));
         
       return transaction;
     });
+  }
+
+  async getTransactionByStripeSession(stripeSessionId: string): Promise<Transaction | undefined> {
+    const [transaction] = await db.select().from(transactions).where(eq(transactions.stripeSessionId, stripeSessionId));
+    return transaction;
   }
 
   async getUser(id: string) {

@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import ProductDetails from "@/pages/ProductDetails";
 import Sell from "@/pages/Sell";
 import Profile from "@/pages/Profile";
+import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/products/:id" component={ProductDetails} />
       <Route path="/sell" component={Sell} />
       <Route path="/profile" component={Profile} />
+      <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route component={NotFound} />
     </Switch>
   );

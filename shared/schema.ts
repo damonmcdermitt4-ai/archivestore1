@@ -23,6 +23,7 @@ export const transactions = pgTable("transactions", {
   productId: integer("product_id").notNull().references(() => products.id),
   amount: integer("amount").notNull(), // in cents
   fee: integer("fee").default(100).notNull(), // $1.00 fee in cents
+  stripeSessionId: text("stripe_session_id"), // For idempotency
   createdAt: timestamp("created_at").defaultNow(),
 });
 
