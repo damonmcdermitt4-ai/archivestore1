@@ -14,11 +14,24 @@ export const PACKAGE_SIZES = {
 
 export type PackageSize = keyof typeof PACKAGE_SIZES;
 
+// Condition options for product listings
+export const CONDITION_OPTIONS = {
+  new: { label: "New with Tags", description: "Brand new, never worn" },
+  like_new: { label: "Like New", description: "Worn once or twice, no flaws" },
+  good: { label: "Good", description: "Lightly worn, minor signs of use" },
+  fair: { label: "Fair", description: "Visible wear, some flaws" },
+  vintage: { label: "Vintage", description: "Aged/distressed aesthetic" },
+} as const;
+
+export type Condition = keyof typeof CONDITION_OPTIONS;
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   sellerId: text("seller_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  brand: text("brand"),
+  condition: text("condition").default("good"), // new, like_new, good, fair, vintage
   price: integer("price").notNull(), // in cents
   imageUrl: text("image_url").notNull(),
   sold: boolean("sold").default(false).notNull(),
@@ -72,6 +85,8 @@ export const insertProductSchema = createInsertSchema(products).omit({
   sold: true, 
   createdAt: true 
 }).extend({
+  brand: z.string().optional(),
+  condition: z.enum(["new", "like_new", "good", "fair", "vintage"]).default("good"),
   packageSize: z.enum(["small", "medium", "large"]).default("medium"),
   shippingPaidBy: z.enum(["buyer", "seller"]).default("buyer"),
   weight: z.number().min(1).max(1120).optional(), // up to 70 lbs in ounces

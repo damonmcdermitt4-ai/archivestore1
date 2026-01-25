@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, ShieldCheck, Truck, RefreshCw, Package } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
-import { PACKAGE_SIZES, type PackageSize } from "@shared/schema";
+import { PACKAGE_SIZES, CONDITION_OPTIONS, type PackageSize, type Condition } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 
 export default function ProductDetails() {
@@ -89,10 +89,17 @@ export default function ProductDetails() {
                 ${(product.price / 100).toFixed(2)}
               </div>
               
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <span className="bg-secondary px-3 py-1 rounded-full text-foreground font-medium">Size M</span>
-                <span className="bg-secondary px-3 py-1 rounded-full text-foreground font-medium">Brand New</span>
-                <span className="bg-secondary px-3 py-1 rounded-full text-foreground font-medium">Vintage</span>
+              <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground">
+                {product.brand && (
+                  <span className="bg-secondary px-3 py-1 text-foreground font-medium uppercase tracking-wide text-xs" data-testid="badge-brand">
+                    {product.brand}
+                  </span>
+                )}
+                {product.condition && CONDITION_OPTIONS[product.condition as Condition] && (
+                  <span className="bg-secondary px-3 py-1 text-foreground font-medium uppercase tracking-wide text-xs" data-testid="badge-condition">
+                    {CONDITION_OPTIONS[product.condition as Condition].label}
+                  </span>
+                )}
               </div>
 
               {/* Shipping Info */}
