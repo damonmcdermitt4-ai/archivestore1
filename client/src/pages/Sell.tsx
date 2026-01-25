@@ -8,15 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Image as ImageIcon, Package, Truck } from "lucide-react";
+import { Loader2, Image as ImageIcon, Package, Truck, Upload } from "lucide-react";
 import { insertProductSchema, PACKAGE_SIZES, CONDITION_OPTIONS } from "@shared/schema";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useUpload } from "@/hooks/use-upload";
 
-const formSchema = insertProductSchema.extend({
-  price: z.coerce.number().min(100, "Price must be at least $1.00"),
+const formSchema = insertProductSchema.omit({ imageUrl: true }).extend({
+  price: z.coerce.number().min(1, "Price must be at least $1.00"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -25,6 +26,30 @@ export default function Sell() {
   const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { mutate: createProduct, isPending } = useCreateProduct();
+  const [uploadedImagePath, setUploadedImagePath] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [imageError, setImageError] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      setUploadedImagePath(response.objectPath);
+      setImageError("");
+    },
+    onError: (error) => {
+      setImageError(error.message);
+      setPreviewUrl("");
+      setUploadedImagePath("");
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -33,7 +58,6 @@ export default function Sell() {
       description: "",
       brand: "",
       condition: "good",
-      imageUrl: "",
       price: undefined,
       packageSize: "medium",
       shippingPaidBy: "buyer",
@@ -46,11 +70,27 @@ export default function Sell() {
     }
   }, [user, authLoading, setLocation]);
 
-  const onSubmit = (data: FormValues) => {
-    createProduct(data);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const localPreview = URL.createObjectURL(file);
+      setPreviewUrl(localPreview);
+      await uploadFile(file);
+    }
   };
 
-  const imageUrl = form.watch("imageUrl");
+  const onSubmit = (data: FormValues) => {
+    if (!uploadedImagePath) {
+      setImageError("Please upload an image");
+      return;
+    }
+    const priceInCents = Math.round(data.price * 100);
+    createProduct({
+      ...data,
+      price: priceInCents,
+      imageUrl: uploadedImagePath,
+    });
+  };
 
   if (authLoading) return null;
 
@@ -71,27 +111,47 @@ export default function Sell() {
               <Card className="p-4 border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors bg-secondary/20">
                 <div className="grid md:grid-cols-2 gap-6 items-center">
                   <div className="space-y-4">
-                     <div className="space-y-2">
-                      <Label htmlFor="imageUrl" className="text-sm">Image URL</Label>
-                      <Input 
-                        id="imageUrl" 
-                        placeholder="https://images.unsplash.com/..." 
-                        {...form.register("imageUrl")}
-                        className="bg-background"
-                        data-testid="input-image-url"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Paste a direct link to your product image
-                      </p>
-                      {form.formState.errors.imageUrl && (
-                        <p className="text-sm text-destructive">{form.formState.errors.imageUrl.message}</p>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                      data-testid="input-image-file"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-20 flex flex-col gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      data-testid="button-upload-image"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          <span className="text-sm uppercase tracking-wide">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6" />
+                          <span className="text-sm uppercase tracking-wide">
+                            {uploadedImagePath ? "Change Image" : "Upload Image"}
+                          </span>
+                        </>
                       )}
-                    </div>
+                    </Button>
+                    {uploadedImagePath && (
+                      <p className="text-xs text-green-600">Image uploaded successfully</p>
+                    )}
+                    {imageError && (
+                      <p className="text-sm text-destructive">{imageError}</p>
+                    )}
                   </div>
                   
                   <div className="aspect-[3/4] bg-secondary overflow-hidden flex items-center justify-center border" data-testid="image-preview">
-                    {imageUrl ? (
-                      <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center p-4 text-muted-foreground">
                         <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -172,19 +232,21 @@ export default function Sell() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price" className="text-base font-semibold uppercase tracking-widest">Price (cents)</Label>
+                <Label htmlFor="price" className="text-base font-semibold uppercase tracking-widest">Price</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
                   <Input 
                     id="price" 
                     type="number"
-                    placeholder="2500 (for $25.00)" 
+                    step="0.01"
+                    min="1"
+                    placeholder="25.00" 
                     {...form.register("price")}
                     className="pl-8 h-12 text-lg font-mono bg-background"
                     data-testid="input-price"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Enter price in cents (e.g. 2500 = $25.00)</p>
+                <p className="text-xs text-muted-foreground">Enter price in dollars</p>
                 {form.formState.errors.price && (
                   <p className="text-sm text-destructive">{form.formState.errors.price.message}</p>
                 )}
@@ -271,11 +333,11 @@ export default function Sell() {
             <Button 
               type="submit" 
               className="w-full h-14 text-lg font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
-              disabled={isPending}
+              disabled={isPending || isUploading || !uploadedImagePath}
               data-testid="button-post-listing"
             >
               {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-              {isPending ? "Posting..." : "Post Listing"}
+              {isPending ? "Posting..." : !uploadedImagePath ? "Upload an Image First" : "Post Listing"}
             </Button>
           </form>
         </div>

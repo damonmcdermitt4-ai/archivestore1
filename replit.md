@@ -41,7 +41,7 @@ Preferred communication style: Simple, everyday language.
 1. **Monorepo Structure**: Client, server, and shared code in single repository with path aliases (@/, @shared/)
 2. **Shared Schema**: Database schema and API contracts shared between frontend and backend via `shared/` directory
 3. **Price Storage**: All prices stored in cents (integers) to avoid floating-point issues
-4. **Product Images**: Using external URLs (Unsplash) for MVP; production would need file upload
+4. **Product Images**: Uploaded via Replit Object Storage with presigned URL flow; stored in cloud bucket
 5. **Type Safety**: End-to-end TypeScript with Zod validation at API boundaries
 
 ### Key Features
