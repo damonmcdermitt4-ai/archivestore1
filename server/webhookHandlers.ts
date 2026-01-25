@@ -1,6 +1,8 @@
 import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 import Stripe from 'stripe';
+import { createShipmentAndPurchaseLabel, type ShippingAddress } from './shippoClient';
+import { type PackageSize } from '@shared/schema';
 
 // Shared fulfillment logic used by both webhook and /api/checkout/complete
 export async function fulfillCheckout(sessionId: string): Promise<{ success: boolean; transaction?: any; error?: string }> {
@@ -12,7 +14,9 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   
   // Fetch verified session from Stripe API (not from payload)
   const stripe = await getUncachableStripeClient();
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ['shipping_details'],
+  });
   
   if (session.payment_status !== 'paid') {
     return { success: false, error: 'Payment not completed' };
@@ -20,6 +24,8 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   
   const productId = session.metadata?.productId;
   const buyerId = session.metadata?.buyerId || 'guest';
+  const shippingCostStr = session.metadata?.shippingCost || '0';
+  const packageSize = (session.metadata?.packageSize as PackageSize) || 'medium';
   
   if (!productId) {
     return { success: false, error: 'Missing productId in session' };
@@ -34,8 +40,9 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     return { success: false, error: 'Product already sold' };
   }
   
-  // Verify amount matches expected price + fee
-  const expectedAmount = product.price + 100;
+  // Calculate expected amount (price + fee + shipping)
+  const shippingCost = parseInt(shippingCostStr, 10);
+  const expectedAmount = product.price + 100 + shippingCost;
   if (session.amount_total !== expectedAmount) {
     return { success: false, error: `Amount mismatch: expected ${expectedAmount}, got ${session.amount_total}` };
   }
@@ -47,8 +54,38 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
     productId: Number(productId),
     amount: product.price,
     fee: 100,
+    shippingCost,
     stripeSessionId: sessionId,
   });
+  
+  // Generate shipping label if we have shipping address
+  if (session.shipping_details?.address) {
+    try {
+      const addr = session.shipping_details.address;
+      const shippingAddress: ShippingAddress = {
+        name: session.shipping_details.name || 'Customer',
+        street1: addr.line1 || '',
+        street2: addr.line2 || undefined,
+        city: addr.city || '',
+        state: addr.state || '',
+        zip: addr.postal_code || '',
+        country: addr.country || 'US',
+      };
+      
+      const label = await createShipmentAndPurchaseLabel(shippingAddress, packageSize);
+      
+      // Update transaction with shipping info
+      await storage.updateTransactionShipping(transaction.id, {
+        shippingLabelUrl: label.labelUrl,
+        trackingNumber: label.trackingNumber,
+      });
+      
+      console.log(`Shipping label generated: ${label.trackingNumber}`);
+    } catch (err) {
+      console.error('Failed to generate shipping label:', err);
+      // Don't fail the transaction - shipping label can be generated later
+    }
+  }
   
   return { success: true, transaction };
 }

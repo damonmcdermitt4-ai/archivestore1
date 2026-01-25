@@ -15,8 +15,9 @@ export interface IStorage {
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: InsertProduct & { sellerId: string }): Promise<Product>;
-  createTransaction(transaction: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string }): Promise<Transaction>;
+  createTransaction(transaction: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string, shippingCost?: number }): Promise<Transaction>;
   getTransactionByStripeSession(stripeSessionId: string): Promise<Transaction | undefined>;
+  updateTransactionShipping(id: number, shippingData: { shippingLabelUrl: string, trackingNumber: string }): Promise<Transaction | undefined>;
   getUser(id: string): Promise<any>; 
 }
 
@@ -35,7 +36,7 @@ export class DatabaseStorage implements IStorage {
     return newProduct;
   }
 
-  async createTransaction(data: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string }): Promise<Transaction> {
+  async createTransaction(data: InsertTransaction & { buyerId: string, fee: number, amount: number, stripeSessionId?: string, shippingCost?: number }): Promise<Transaction> {
     return await db.transaction(async (tx) => {
       const [transaction] = await tx.insert(transactions).values(data).returning();
       
@@ -50,6 +51,14 @@ export class DatabaseStorage implements IStorage {
   async getTransactionByStripeSession(stripeSessionId: string): Promise<Transaction | undefined> {
     const [transaction] = await db.select().from(transactions).where(eq(transactions.stripeSessionId, stripeSessionId));
     return transaction;
+  }
+
+  async updateTransactionShipping(id: number, shippingData: { shippingLabelUrl: string, trackingNumber: string }): Promise<Transaction | undefined> {
+    const [updated] = await db.update(transactions)
+      .set(shippingData)
+      .where(eq(transactions.id, id))
+      .returning();
+    return updated;
   }
 
   async getUser(id: string) {

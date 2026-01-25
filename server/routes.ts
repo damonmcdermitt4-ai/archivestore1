@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { users, PACKAGE_SIZES, type PackageSize } from "@shared/schema";
 import type { Server } from "http";
 import type { Express } from "express";
 import { storage } from "./storage";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { fulfillCheckout } from "./webhookHandlers";
+import { getShippingRates, getEstimatedShippingCost, isShippoConfigured } from "./shippoClient";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -60,10 +61,56 @@ export async function registerRoutes(
     }
   });
 
+  // Get shipping rates for a product
+  app.post('/api/shipping/rates', async (req, res) => {
+    try {
+      const { productId, address } = req.body;
+      
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const packageSize = (product.packageSize as PackageSize) || "medium";
+      const rates = await getShippingRates(address, packageSize);
+      
+      res.json({ 
+        rates,
+        shippingPaidBy: product.shippingPaidBy,
+        isConfigured: isShippoConfigured(),
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to get shipping rates" });
+    }
+  });
+
+  // Get estimated shipping cost for a product (without address)
+  app.get('/api/shipping/estimate/:productId', async (req, res) => {
+    try {
+      const product = await storage.getProduct(Number(req.params.productId));
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const packageSize = (product.packageSize as PackageSize) || "medium";
+      const estimatedCost = getEstimatedShippingCost(packageSize);
+      
+      res.json({ 
+        estimatedCost,
+        shippingPaidBy: product.shippingPaidBy,
+        packageSize,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to estimate shipping" });
+    }
+  });
+
   // Create Stripe Checkout Session for a product
   app.post('/api/checkout', async (req: any, res) => {
     try {
-      const { productId } = req.body;
+      const { productId, shippingRateId } = req.body;
       const product = await storage.getProduct(productId);
       
       if (!product) {
@@ -81,31 +128,77 @@ export async function registerRoutes(
       const stripe = await getUncachableStripeClient();
       const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
 
-      // Create Stripe Checkout session with $1 platform fee
+      // Calculate shipping cost
+      const packageSize = (product.packageSize as PackageSize) || "medium";
+      let shippingCost = 0;
+      
+      // If buyer pays shipping, add shipping cost
+      if (product.shippingPaidBy === "buyer") {
+        shippingCost = getEstimatedShippingCost(packageSize);
+      }
+
+      const platformFee = 100; // $1.00
+      const totalAmount = product.price + platformFee + shippingCost;
+
+      // Build line items
+      const lineItems: any[] = [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: product.title,
+              description: product.description,
+              images: product.imageUrl.startsWith('http') ? [product.imageUrl] : [`${baseUrl}${product.imageUrl}`],
+            },
+            unit_amount: product.price,
+          },
+          quantity: 1,
+        },
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Platform Fee',
+              description: 'Service fee',
+            },
+            unit_amount: platformFee,
+          },
+          quantity: 1,
+        },
+      ];
+
+      // Add shipping as line item if buyer pays
+      if (shippingCost > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Shipping',
+              description: `${PACKAGE_SIZES[packageSize].label} package`,
+            },
+            unit_amount: shippingCost,
+          },
+          quantity: 1,
+        });
+      }
+
+      // Create Stripe Checkout session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: product.title,
-                description: product.description,
-                images: product.imageUrl.startsWith('http') ? [product.imageUrl] : [`${baseUrl}${product.imageUrl}`],
-              },
-              unit_amount: product.price + 100, // Price + $1.00 platform fee
-            },
-            quantity: 1,
-          },
-        ],
+        line_items: lineItems,
         mode: 'payment',
+        shipping_address_collection: {
+          allowed_countries: ['US'],
+        },
         success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&product_id=${productId}`,
         cancel_url: `${baseUrl}/products/${productId}`,
         metadata: {
           productId: String(productId),
           sellerId: product.sellerId,
           buyerId: req.isAuthenticated() ? req.user.claims.sub : 'guest',
-          platformFee: '100', // $1.00 in cents
+          platformFee: String(platformFee),
+          shippingCost: String(shippingCost),
+          packageSize,
         },
       });
 

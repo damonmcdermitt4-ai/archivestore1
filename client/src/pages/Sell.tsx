@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Image as ImageIcon } from "lucide-react";
-import { insertProductSchema } from "@shared/schema";
+import { Loader2, Image as ImageIcon, Package, Truck } from "lucide-react";
+import { insertProductSchema, PACKAGE_SIZES } from "@shared/schema";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Extend schema for form validation
 const formSchema = insertProductSchema.extend({
@@ -33,6 +34,8 @@ export default function Sell() {
       description: "",
       imageUrl: "",
       price: undefined,
+      packageSize: "medium",
+      shippingPaidBy: "buyer",
     },
   });
 
@@ -145,6 +148,86 @@ export default function Sell() {
                 {form.formState.errors.price && (
                   <p className="text-sm text-destructive">{form.formState.errors.price.message}</p>
                 )}
+              </div>
+            </div>
+
+            {/* Shipping Options */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="w-5 h-5" />
+                <h2 className="text-lg font-semibold tracking-wide uppercase">Shipping</h2>
+              </div>
+
+              {/* Package Size */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Package Size</Label>
+                <RadioGroup
+                  value={form.watch("packageSize")}
+                  onValueChange={(value) => form.setValue("packageSize", value as "small" | "medium" | "large")}
+                  className="grid gap-3"
+                  data-testid="radio-package-size"
+                >
+                  {(Object.entries(PACKAGE_SIZES) as [string, typeof PACKAGE_SIZES.small][]).map(([key, size]) => (
+                    <label
+                      key={key}
+                      className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                        form.watch("packageSize") === key 
+                          ? "border-foreground bg-secondary/50" 
+                          : "border-border hover:border-muted-foreground"
+                      }`}
+                    >
+                      <RadioGroupItem value={key} id={`size-${key}`} data-testid={`radio-size-${key}`} />
+                      <div className="flex-1">
+                        <div className="font-semibold uppercase tracking-wide">{size.label}</div>
+                        <div className="text-sm text-muted-foreground">{size.description}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Max weight: {size.maxWeight} lb
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              {/* Shipping Paid By */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Who Pays Shipping?</Label>
+                <RadioGroup
+                  value={form.watch("shippingPaidBy")}
+                  onValueChange={(value) => form.setValue("shippingPaidBy", value as "buyer" | "seller")}
+                  className="grid gap-3"
+                  data-testid="radio-shipping-paid-by"
+                >
+                  <label
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                      form.watch("shippingPaidBy") === "buyer" 
+                        ? "border-foreground bg-secondary/50" 
+                        : "border-border hover:border-muted-foreground"
+                    }`}
+                  >
+                    <RadioGroupItem value="buyer" id="shipping-buyer" data-testid="radio-shipping-buyer" />
+                    <div className="flex-1">
+                      <div className="font-semibold uppercase tracking-wide">Buyer Pays</div>
+                      <div className="text-sm text-muted-foreground">Shipping cost added at checkout</div>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                      form.watch("shippingPaidBy") === "seller" 
+                        ? "border-foreground bg-secondary/50" 
+                        : "border-border hover:border-muted-foreground"
+                    }`}
+                  >
+                    <RadioGroupItem value="seller" id="shipping-seller" data-testid="radio-shipping-seller" />
+                    <div className="flex-1">
+                      <div className="font-semibold uppercase tracking-wide flex items-center gap-2">
+                        Free Shipping
+                        <Truck className="w-4 h-4" />
+                      </div>
+                      <div className="text-sm text-muted-foreground">You cover shipping costs</div>
+                    </div>
+                  </label>
+                </RadioGroup>
               </div>
             </div>
 
