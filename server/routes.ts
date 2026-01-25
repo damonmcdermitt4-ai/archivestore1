@@ -84,6 +84,100 @@ export async function registerRoutes(
     }
   });
 
+  // ========== FAVORITES ENDPOINTS ==========
+  
+  // Get user's favorites
+  app.get('/api/favorites', isAuthenticated, async (req: any, res) => {
+    try {
+      const favorites = await storage.getFavoritesByUser(req.user.claims.sub);
+      const productsWithDetails = await Promise.all(
+        favorites.map(async (fav) => {
+          const product = await storage.getProduct(fav.productId);
+          if (!product) return null;
+          const seller = await storage.getUser(product.sellerId);
+          return { ...fav, product: { ...product, seller } };
+        })
+      );
+      res.json(productsWithDetails.filter(Boolean));
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get favorites' });
+    }
+  });
+
+  // Check if product is favorited
+  app.get('/api/favorites/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      const isFavorited = await storage.isFavorited(req.user.claims.sub, Number(req.params.productId));
+      res.json({ isFavorited });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to check favorite status' });
+    }
+  });
+
+  // Add to favorites
+  app.post('/api/favorites/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      const productId = Number(req.params.productId);
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      
+      // Check if already favorited
+      const alreadyFavorited = await storage.isFavorited(req.user.claims.sub, productId);
+      if (alreadyFavorited) {
+        return res.json({ message: 'Already favorited' });
+      }
+      
+      const favorite = await storage.addFavorite(req.user.claims.sub, productId);
+      res.status(201).json(favorite);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to add favorite' });
+    }
+  });
+
+  // Remove from favorites
+  app.delete('/api/favorites/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.removeFavorite(req.user.claims.sub, Number(req.params.productId));
+      res.json({ message: 'Removed from favorites' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to remove favorite' });
+    }
+  });
+
+  // Get product like count
+  app.get('/api/products/:id/likes', async (req, res) => {
+    try {
+      const count = await storage.getProductLikeCount(Number(req.params.id));
+      res.json({ count });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get like count' });
+    }
+  });
+
+  // Get products with like counts (for recommended sorting)
+  app.get('/api/products/with-likes', async (req, res) => {
+    try {
+      const products = await storage.getProductsWithLikeCounts();
+      const productsWithSellers = await Promise.all(
+        products.map(async (product) => {
+          const seller = await storage.getUser(product.sellerId);
+          return { ...product, seller };
+        })
+      );
+      res.json(productsWithSellers);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get products with likes' });
+    }
+  });
+
   // Get Stripe publishable key for frontend
   app.get('/api/stripe/config', async (req, res) => {
     try {
