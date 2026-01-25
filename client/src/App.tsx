@@ -9,6 +9,7 @@ import ProductDetails from "@/pages/ProductDetails";
 import Sell from "@/pages/Sell";
 import Profile from "@/pages/Profile";
 import SellerProfile from "@/pages/SellerProfile";
+import Favorites from "@/pages/Favorites";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import NotFound from "@/pages/not-found";
 
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/sell" component={Sell} />
       <Route path="/profile" component={Profile} />
       <Route path="/sellers/:id" component={SellerProfile} />
+      <Route path="/favorites" component={Favorites} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route component={NotFound} />
     </Switch>

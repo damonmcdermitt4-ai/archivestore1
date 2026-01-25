@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useFavorites } from "@/hooks/use-favorites";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Search, Plus, User as UserIcon, LogOut } from "lucide-react";
+import { Heart, Search, Plus, User as UserIcon, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,16 +16,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function Navbar() {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { data: favorites } = useFavorites();
+  
+  const favoriteCount = Array.isArray(favorites) ? favorites.length : 0;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <span className="font-display font-bold text-2xl tracking-tight uppercase">ARCHIVE COMMODITIES.</span>
         </Link>
 
-        {/* Search Bar - Editorial Minimalist Style */}
         <div className="flex items-center flex-1 max-w-xl mx-8 relative">
           <input 
             type="text"
@@ -34,10 +36,25 @@ export function Navbar() {
           <Search className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-4">
           {user ? (
             <>
+              <Link href="/favorites">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="relative"
+                  data-testid="button-favorites-nav"
+                >
+                  <Heart className="w-5 h-5" />
+                  {favoriteCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center font-bold">
+                      {favoriteCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              
               <Link href="/sell">
                 <Button 
                   size="sm" 
@@ -65,6 +82,15 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <Link href="/favorites">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Favorites</span>
+                      {favoriteCount > 0 && (
+                        <span className="ml-auto text-xs text-muted-foreground">{favoriteCount}</span>
+                      )}
+                    </DropdownMenuItem>
+                  </Link>
                   <Link href="/profile">
                     <DropdownMenuItem className="cursor-pointer">
                       <UserIcon className="mr-2 h-4 w-4" />
