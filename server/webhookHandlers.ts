@@ -72,11 +72,12 @@ export async function fulfillCheckout(sessionId: string): Promise<{ success: boo
   });
   
   // Generate shipping label if we have shipping address
-  if (session.shipping_details?.address) {
+  const shippingDetails = (session as any).shipping_details;
+  if (shippingDetails?.address) {
     try {
-      const addr = session.shipping_details.address;
+      const addr = shippingDetails.address;
       const shippingAddress: ShippingAddress = {
-        name: session.shipping_details.name || 'Customer',
+        name: shippingDetails.name || 'Customer',
         street1: addr.line1 || '',
         street2: addr.line2 || undefined,
         city: addr.city || '',

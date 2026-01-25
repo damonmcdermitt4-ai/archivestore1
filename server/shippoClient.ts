@@ -1,4 +1,4 @@
-import Shippo from "shippo";
+import { Shippo } from "shippo";
 import { PACKAGE_SIZES, type PackageSize } from "@shared/schema";
 
 const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY;
@@ -74,8 +74,8 @@ export async function getShippingRates(
     const rates = shipment.rates || [];
     
     return rates
-      .filter((rate) => rate.amount && rate.provider && rate.servicelevel?.name)
-      .map((rate) => ({
+      .filter((rate: any) => rate.amount && rate.provider && rate.servicelevel?.name)
+      .map((rate: any) => ({
         rateId: rate.objectId || "",
         carrier: rate.provider || "",
         service: rate.servicelevel?.name || "",
@@ -83,7 +83,7 @@ export async function getShippingRates(
         amount: Math.round(parseFloat(rate.amount || "0") * 100),
         currency: rate.currency || "USD",
       }))
-      .sort((a, b) => a.amount - b.amount)
+      .sort((a: ShippingRate, b: ShippingRate) => a.amount - b.amount)
       .slice(0, 5);
   } catch (error) {
     console.error("Error fetching shipping rates:", error);
