@@ -55,6 +55,13 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const favorites = pgTable("favorites", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const productsRelations = relations(products, ({ one }) => ({
   seller: one(users, {
     fields: [products.sellerId],
@@ -75,6 +82,17 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
   product: one(products, {
     fields: [transactions.productId],
+    references: [products.id],
+  }),
+}));
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [favorites.productId],
     references: [products.id],
   }),
 }));
@@ -101,3 +119,4 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type Favorite = typeof favorites.$inferSelect;
