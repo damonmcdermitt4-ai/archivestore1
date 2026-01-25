@@ -9,6 +9,7 @@ import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integra
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { fulfillCheckout } from "./webhookHandlers";
 import { getShippingRates, getEstimatedShippingCost, isShippoConfigured } from "./shippoClient";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -17,6 +18,9 @@ export async function registerRoutes(
   // Setup Auth FIRST
   await setupAuth(app);
   registerAuthRoutes(app);
+  
+  // Register object storage routes for file uploads
+  registerObjectStorageRoutes(app);
 
   app.get(api.products.list.path, async (req, res) => {
     const products = await storage.getProducts();
