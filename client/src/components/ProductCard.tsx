@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { type Product } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
@@ -18,6 +18,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { user } = useAuth();
   const { data: favorites } = useFavorites();
   const { toggle, isPending } = useToggleFavorite();
+  const [, setLocation] = useLocation();
   
   const isFavorited = Array.isArray(favorites) && favorites.some((f: any) => f.productId === product.id);
   
@@ -28,8 +29,20 @@ export function ProductCard({ product }: ProductCardProps) {
     await toggle(product.id, isFavorited);
   };
   
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-no-navigate]')) {
+      return;
+    }
+    setLocation(`/products/${product.id}`);
+  };
+  
   return (
-    <Link href={`/products/${product.id}`} className="block group">
+    <div 
+      className="block group cursor-pointer" 
+      onClick={handleCardClick}
+      data-testid={`card-product-${product.id}`}
+    >
       <div className="relative aspect-[3/4] overflow-hidden bg-secondary mb-3">
         {isSold && (
           <div className="absolute inset-0 z-10 bg-black/50 backdrop-blur-[1px] flex items-center justify-center">
@@ -51,6 +64,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={handleFavoriteClick}
             disabled={isPending}
+            data-no-navigate
             className={cn(
               "absolute top-3 right-3 p-2 transition-all z-20",
               "bg-background/80 backdrop-blur-sm border border-border",
@@ -93,6 +107,7 @@ export function ProductCard({ product }: ProductCardProps) {
                  href={`/sellers/${product.sellerId}`} 
                  className="flex items-center gap-1.5 hover:text-foreground transition-colors"
                  onClick={(e) => e.stopPropagation()}
+                 data-no-navigate
                  data-testid={`link-seller-${product.sellerId}`}
                >
                  <Avatar className="w-5 h-5">
@@ -107,6 +122,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

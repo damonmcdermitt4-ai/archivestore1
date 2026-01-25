@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { useProducts } from "@/hooks/use-products";
+import { useProductsWithLikes } from "@/hooks/use-favorites";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
@@ -17,6 +18,7 @@ type SortOption = "new" | "recommended";
 
 export default function Home() {
   const { data: products, isLoading, error } = useProducts();
+  const { data: productsWithLikes } = useProductsWithLikes();
   const [showAll, setShowAll] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("new");
 
@@ -43,11 +45,18 @@ export default function Home() {
     );
   }
 
-  const sortedProducts = [...(products || [])].sort((a: any, b: any) => {
+  const baseProducts = sortBy === "recommended" && productsWithLikes 
+    ? productsWithLikes 
+    : products;
+
+  const sortedProducts = [...(baseProducts || [])].sort((a: any, b: any) => {
     if (sortBy === "new") {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     } else {
-      return b.price - a.price;
+      const aLikes = a.likeCount || 0;
+      const bLikes = b.likeCount || 0;
+      if (bLikes !== aLikes) return bLikes - aLikes;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
 

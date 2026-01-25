@@ -29,6 +29,23 @@ export async function registerRoutes(
     res.json(productsWithSellers);
   });
 
+  // Get products with like counts - must be before :id route
+  app.get('/api/products/with-likes', async (req, res) => {
+    try {
+      const productsData = await storage.getProductsWithLikeCounts();
+      const productsWithSellers = await Promise.all(
+        productsData.map(async (product) => {
+          const seller = await storage.getUser(product.sellerId);
+          return { ...product, seller };
+        })
+      );
+      res.json(productsWithSellers);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get products with likes' });
+    }
+  });
+
   app.get(api.products.get.path, async (req, res) => {
     const product = await storage.getProduct(Number(req.params.id));
     if (!product) {
@@ -158,23 +175,6 @@ export async function registerRoutes(
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Failed to get like count' });
-    }
-  });
-
-  // Get products with like counts (for recommended sorting)
-  app.get('/api/products/with-likes', async (req, res) => {
-    try {
-      const products = await storage.getProductsWithLikeCounts();
-      const productsWithSellers = await Promise.all(
-        products.map(async (product) => {
-          const seller = await storage.getUser(product.sellerId);
-          return { ...product, seller };
-        })
-      );
-      res.json(productsWithSellers);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Failed to get products with likes' });
     }
   });
 
