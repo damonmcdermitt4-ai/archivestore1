@@ -44,6 +44,14 @@ Preferred communication style: Simple, everyday language.
 4. **Product Images**: Using external URLs (Unsplash) for MVP; production would need file upload
 5. **Type Safety**: End-to-end TypeScript with Zod validation at API boundaries
 
+### Key Features
+
+1. **Seller Profiles**: Click on a seller's name/avatar to view all their listings at `/sellers/:id`
+2. **Home Page Sorting**: "View All" button reveals sorting options (New/Recommended)
+3. **Guest Checkout**: Users can purchase without logging in
+4. **Shipping Integration**: Package size selection, buyer/seller pays options, auto-generated labels
+5. **Platform Fee**: $1 fee added to each transaction
+
 ## External Dependencies
 
 ### Payment Processing
