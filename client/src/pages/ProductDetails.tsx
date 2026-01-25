@@ -4,9 +4,11 @@ import { useCreateTransaction } from "@/hooks/use-transactions";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ShieldCheck, Truck, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, Truck, RefreshCw, Package } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
+import { PACKAGE_SIZES, type PackageSize } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ProductDetails() {
   const [, params] = useRoute("/products/:id");
@@ -14,6 +16,15 @@ export default function ProductDetails() {
   const { data: product, isLoading } = useProduct(id);
   const { mutate: buy, isPending } = useCreateTransaction();
   const { user } = useAuth();
+
+  const { data: shippingEstimate } = useQuery<{
+    estimatedCost: number;
+    shippingPaidBy: string;
+    packageSize: PackageSize;
+  }>({
+    queryKey: ['/api/shipping/estimate', id],
+    enabled: !!product,
+  });
 
   if (isLoading) {
     return (
@@ -83,6 +94,29 @@ export default function ProductDetails() {
                 <span className="bg-secondary px-3 py-1 rounded-full text-foreground font-medium">Brand New</span>
                 <span className="bg-secondary px-3 py-1 rounded-full text-foreground font-medium">Vintage</span>
               </div>
+
+              {/* Shipping Info */}
+              {shippingEstimate && (
+                <div className="flex items-center gap-3 p-4 bg-secondary/50 border border-border" data-testid="shipping-info">
+                  <Package className="w-5 h-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {shippingEstimate.shippingPaidBy === "seller" ? (
+                        <span className="font-semibold uppercase tracking-wide text-sm" data-testid="text-free-shipping">
+                          Free Shipping
+                        </span>
+                      ) : (
+                        <span className="font-semibold uppercase tracking-wide text-sm" data-testid="text-shipping-cost">
+                          + ${(shippingEstimate.estimatedCost / 100).toFixed(2)} Shipping
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {PACKAGE_SIZES[shippingEstimate.packageSize]?.label} package
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator />

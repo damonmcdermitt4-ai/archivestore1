@@ -291,6 +291,8 @@ export async function registerRoutes(
         description: "Iconic military-inspired Bono jacket by Le Grand Bleu. Distressed detailing and complex construction.",
         price: 85000, // $850.00
         imageUrl: "/images/lgb_bono.png",
+        packageSize: "large",
+        shippingPaidBy: "buyer",
       });
       await storage.createProduct({
         sellerId,
@@ -298,6 +300,8 @@ export async function registerRoutes(
         description: "Customized pilot jacket with multi-pocket detailing and avant-garde silhouette.",
         price: 65000, // $650.00
         imageUrl: "/images/pilot_jacket.png",
+        packageSize: "large",
+        shippingPaidBy: "seller", // Free shipping
       });
       await storage.createProduct({
         sellerId,
@@ -305,6 +309,8 @@ export async function registerRoutes(
         description: "Minimalist black riders jacket by Le Grand Bleu. Asymmetric zip and slim silhouette.",
         price: 75000, // $750.00
         imageUrl: "/images/lgb_riders.png",
+        packageSize: "medium",
+        shippingPaidBy: "buyer",
       });
     }
   }
