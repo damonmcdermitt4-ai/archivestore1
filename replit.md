@@ -1,8 +1,8 @@
-# Archive Commodities
+# Archive Exchange
 
 ## Overview
 
-Archive Commodities is a peer-to-peer marketplace application for buying and selling curated items. Users can list products for sale, browse available items, and complete purchases through Stripe checkout. The application features a modern, editorial-style design with an avant-garde minimalist aesthetic.
+Archive Exchange is a peer-to-peer marketplace application for buying and selling curated items. Users can list products for sale, browse available items, and complete purchases through Stripe checkout. The application features a modern, editorial-style design with an avant-garde minimalist aesthetic.
 
 ## User Preferences
 

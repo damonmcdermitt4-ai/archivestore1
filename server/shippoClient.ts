@@ -10,14 +10,14 @@ if (!SHIPPO_API_KEY) {
 const shippo = SHIPPO_API_KEY ? new Shippo({ apiKeyHeader: SHIPPO_API_KEY }) : null;
 
 const FROM_ADDRESS = {
-  name: "Archive Commodities",
+  name: "Archive Exchange",
   street1: "123 Archive Street",
   city: "Los Angeles",
   state: "CA",
   zip: "90001",
   country: "US",
   phone: "+1 555 341 9393",
-  email: "shipping@archive-commodities.com",
+  email: "shipping@archive-exchange.com",
 };
 
 export interface ShippingAddress {

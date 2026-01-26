@@ -158,6 +158,20 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      <footer className="mt-24 border-t border-foreground/10">
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto text-center space-y-6">
+            <h3 className="text-sm font-medium tracking-[0.3em] uppercase text-muted-foreground">Our Mission</h3>
+            <p className="text-lg leading-relaxed text-foreground/80" data-testid="text-mission-statement">
+              Archive Exchange is a curated marketplace for the exchange of rare, vintage, and one-of-a-kind pieces. We believe in the preservation of quality craftsmanship and the stories behind each item. Our platform connects collectors, enthusiasts, and individuals seeking to give cherished items a new home.
+            </p>
+            <div className="pt-8 border-t border-foreground/5">
+              <span className="text-xs tracking-[0.2em] uppercase text-muted-foreground">ARCHIVE EXCHANGE.</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
