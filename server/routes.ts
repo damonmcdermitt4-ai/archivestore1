@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, PACKAGE_SIZES, type PackageSize } from "@shared/schema";
+import { users, PACKAGE_SIZES, type PackageSize, insertMessageSchema } from "@shared/schema";
 import type { Server } from "http";
 import type { Express } from "express";
 import { storage } from "./storage";
@@ -8,7 +8,7 @@ import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { fulfillCheckout } from "./webhookHandlers";
-import { getShippingRates, getEstimatedShippingCost, isShippoConfigured } from "./shippoClient";
+import { getShippingRates, getEstimatedShippingCost, isShippoConfigured, purchaseShippingLabel } from "./shippoClient";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 export async function registerRoutes(
@@ -47,6 +47,41 @@ export async function registerRoutes(
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Failed to get products with likes' });
+    }
+  });
+
+  // Search products - supports "sold" keyword to show sold items
+  app.get('/api/products/search', async (req, res) => {
+    try {
+      const query = req.query.q as string || '';
+      const products = await storage.searchProducts(query);
+      const productsWithSellers = await Promise.all(
+        products.map(async (product) => {
+          const seller = await storage.getUser(product.sellerId);
+          return { ...product, seller };
+        })
+      );
+      res.json(productsWithSellers);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to search products' });
+    }
+  });
+
+  // Get sold products
+  app.get('/api/products/sold', async (req, res) => {
+    try {
+      const products = await storage.getSoldProducts();
+      const productsWithSellers = await Promise.all(
+        products.map(async (product) => {
+          const seller = await storage.getUser(product.sellerId);
+          return { ...product, seller };
+        })
+      );
+      res.json(productsWithSellers);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get sold products' });
     }
   });
 
@@ -402,58 +437,151 @@ export async function registerRoutes(
     }
   });
 
-  async function seedDatabase() {
-    const existingUsers = await db.select().from(users).limit(1);
-    let sellerId = existingUsers[0]?.id;
-
-    if (!sellerId) {
-      const [user] = await db.insert(users).values({
-        email: "guest@example.com",
-        firstName: "Avant",
-        lastName: "Garde",
-      }).returning();
-      sellerId = user.id;
+  // ========== ORDERS ENDPOINTS ==========
+  
+  // Get buyer's orders (purchases)
+  app.get('/api/orders/purchases', isAuthenticated, async (req: any, res) => {
+    try {
+      const transactions = await storage.getTransactionsByBuyer(req.user.claims.sub);
+      const ordersWithDetails = await Promise.all(
+        transactions.map(async (tx) => {
+          const product = await storage.getProduct(tx.productId);
+          const seller = product ? await storage.getUser(product.sellerId) : null;
+          return { ...tx, product, seller };
+        })
+      );
+      res.json(ordersWithDetails);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get orders' });
     }
+  });
 
-    const existingProducts = await storage.getProducts();
-    if (existingProducts.length === 0) {
-      await storage.createProduct({
-        sellerId,
-        title: "LGB BONO",
-        description: "Iconic military-inspired Bono jacket by Le Grand Bleu. Distressed detailing and complex construction.",
-        price: 85000,
-        imageUrl: "/images/lgb_bono.png",
-        brand: "Le Grand Bleu",
-        condition: "vintage",
-        packageSize: "large",
-        shippingPaidBy: "buyer",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "PILOT JACKET",
-        description: "Customized pilot jacket with multi-pocket detailing and avant-garde silhouette.",
-        price: 65000,
-        imageUrl: "/images/pilot_jacket.png",
-        brand: "Custom",
-        condition: "good",
-        packageSize: "large",
-        shippingPaidBy: "seller",
-      });
-      await storage.createProduct({
-        sellerId,
-        title: "LGB RIDERS JACKET",
-        description: "Minimalist black riders jacket by Le Grand Bleu. Asymmetric zip and slim silhouette.",
-        price: 75000,
-        imageUrl: "/images/lgb_riders.png",
-        brand: "Le Grand Bleu",
-        condition: "like_new",
-        packageSize: "medium",
-        shippingPaidBy: "buyer",
-      });
+  // Get seller's orders (sales)
+  app.get('/api/orders/sales', isAuthenticated, async (req: any, res) => {
+    try {
+      const transactions = await storage.getTransactionsBySeller(req.user.claims.sub);
+      const ordersWithDetails = await Promise.all(
+        transactions.map(async (tx) => {
+          const product = await storage.getProduct(tx.productId);
+          const buyer = tx.buyerId !== 'guest' ? await storage.getUser(tx.buyerId) : null;
+          return { ...tx, product, buyer };
+        })
+      );
+      res.json(ordersWithDetails);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get sales' });
     }
-  }
+  });
 
-  await seedDatabase();
+  // Mark order as shipped (seller adds tracking)
+  app.post('/api/orders/:id/ship', isAuthenticated, async (req: any, res) => {
+    try {
+      const orderId = Number(req.params.id);
+      const { trackingNumber } = req.body;
+      
+      if (!trackingNumber) {
+        return res.status(400).json({ message: 'Tracking number is required' });
+      }
+
+      // Get the transaction
+      const transactions = await storage.getTransactionsBySeller(req.user.claims.sub);
+      const transaction = transactions.find(t => t.id === orderId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      
+      if (transaction.shipped) {
+        return res.status(400).json({ message: 'Order already shipped' });
+      }
+
+      const updated = await storage.updateTransactionShipping(orderId, {
+        trackingNumber,
+        shipped: true,
+      });
+
+      res.json(updated);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to mark as shipped' });
+    }
+  });
+
+  // ========== MESSAGES ENDPOINTS ==========
+  
+  // Send message to seller about a product
+  app.post('/api/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const { productId, receiverId, content } = req.body;
+      
+      if (!productId || !receiverId || !content) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      const message = await storage.createMessage({
+        productId,
+        senderId: req.user.claims.sub,
+        receiverId,
+        content,
+      });
+
+      res.status(201).json(message);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
+
+  // Get messages for a product (conversation)
+  app.get('/api/messages/product/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      const productId = Number(req.params.productId);
+      const messages = await storage.getMessagesByProduct(productId);
+      
+      // Only allow sender, receiver, or product owner to view messages
+      const product = await storage.getProduct(productId);
+      const userId = req.user.claims.sub;
+      
+      const userMessages = messages.filter(
+        m => m.senderId === userId || m.receiverId === userId || product?.sellerId === userId
+      );
+      
+      // Mark as read
+      await storage.markMessagesAsRead(productId, userId);
+      
+      res.json(userMessages);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get messages' });
+    }
+  });
+
+  // Get all conversations for current user
+  app.get('/api/messages/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const conversations = await storage.getConversations(req.user.claims.sub);
+      
+      const conversationsWithDetails = await Promise.all(
+        conversations.map(async (conv) => {
+          const product = await storage.getProduct(conv.productId);
+          const otherUser = await storage.getUser(conv.otherUserId);
+          return { ...conv, product, otherUser };
+        })
+      );
+      
+      res.json(conversationsWithDetails);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to get conversations' });
+    }
+  });
 
   return httpServer;
 }

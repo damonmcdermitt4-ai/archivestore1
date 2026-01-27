@@ -52,6 +52,10 @@ Preferred communication style: Simple, everyday language.
 4. **Shipping Integration**: Package size selection, buyer/seller pays options, auto-generated labels
 5. **Platform Fee**: $1 fee added to each transaction
 6. **Favorites System**: Logged-in users can heart items to save them; view all favorites at `/favorites`; recommended sorting boosts items with more likes
+7. **Search**: Full-text search across products at `/search?q=<query>`; special "sold" query shows sold items archive
+8. **Messaging System**: Buyers can message sellers about products at `/messages`; start conversation from product details page
+9. **Order Tracking**: Buyers view purchases at `/orders`; sellers view sales and mark orders as shipped with tracking numbers
+10. **International Shipping**: Sellers can set custom international shipping rates with manual tracking
 
 ## External Dependencies
 

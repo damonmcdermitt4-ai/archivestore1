@@ -5,7 +5,7 @@ import { useFavorites, useToggleFavorite } from "@/hooks/use-favorites";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ShieldCheck, Truck, RefreshCw, Package, Heart } from "lucide-react";
+import { Loader2, ShieldCheck, Truck, RefreshCw, Package, Heart, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
 import { PACKAGE_SIZES, CONDITION_OPTIONS, type PackageSize, type Condition } from "@shared/schema";
@@ -217,6 +217,20 @@ export default function ProductDetails() {
               ) : (
                 <Button className="w-full h-14 text-lg rounded-xl" disabled variant="outline">
                   Sold Out
+                </Button>
+              )}
+              
+              {!isOwner && user && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = `/messages?product=${id}&seller=${product.sellerId}`;
+                  }}
+                  data-testid="button-message-seller"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Message Seller
                 </Button>
               )}
               

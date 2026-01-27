@@ -18,6 +18,7 @@ import { useUpload } from "@/hooks/use-upload";
 
 const formSchema = insertProductSchema.omit({ imageUrl: true }).extend({
   price: z.coerce.number().min(1, "Price must be at least $1.00"),
+  internationalShippingPrice: z.coerce.number().min(0).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,6 +62,7 @@ export default function Sell() {
       price: undefined,
       packageSize: "medium",
       shippingPaidBy: "buyer",
+      internationalShippingPrice: undefined,
     },
   });
 
@@ -85,9 +87,13 @@ export default function Sell() {
       return;
     }
     const priceInCents = Math.round(data.price * 100);
+    const internationalShippingPriceInCents = data.internationalShippingPrice 
+      ? Math.round(data.internationalShippingPrice * 100) 
+      : undefined;
     createProduct({
       ...data,
       price: priceInCents,
+      internationalShippingPrice: internationalShippingPriceInCents,
       imageUrl: uploadedImagePath,
     });
   };
@@ -327,6 +333,28 @@ export default function Sell() {
                     </div>
                   </label>
                 </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="internationalShippingPrice" className="text-base font-semibold uppercase tracking-widest">
+                  International Shipping Price (Optional)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                  <Input 
+                    id="internationalShippingPrice" 
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="35.00" 
+                    {...form.register("internationalShippingPrice")}
+                    className="pl-8 h-12 text-lg font-mono bg-background"
+                    data-testid="input-international-shipping"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Set a flat rate for international buyers. You'll need to add tracking manually to get paid.
+                </p>
               </div>
             </div>
 

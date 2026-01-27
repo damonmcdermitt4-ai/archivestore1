@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { Button } from "@/components/ui/button";
-import { Heart, Search, Plus, User as UserIcon, LogOut } from "lucide-react";
+import { Heart, Search, Plus, User as UserIcon, LogOut, MessageCircle, Package } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +16,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
   const { user, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { data: favorites } = useFavorites();
+  const [searchQuery, setSearchQuery] = useState("");
   
   const favoriteCount = Array.isArray(favorites) ? favorites.length : 0;
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
@@ -27,14 +36,19 @@ export function Navbar() {
           <span className="font-display font-bold text-2xl tracking-tight uppercase">ARCHIVE EXCHANGE.</span>
         </Link>
 
-        <div className="flex items-center flex-1 max-w-xl mx-8 relative">
+        <form onSubmit={handleSearch} className="flex items-center flex-1 max-w-xl mx-8 relative">
           <input 
             type="text"
             placeholder="SEARCH"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-10 border-b border-foreground bg-transparent focus:outline-none transition-all text-sm font-medium tracking-widest placeholder:text-muted-foreground/50"
+            data-testid="input-search"
           />
-          <Search className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
-        </div>
+          <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2" data-testid="button-search-submit">
+            <Search className="w-4 h-4 text-foreground" />
+          </button>
+        </form>
 
         <div className="flex items-center gap-4">
           {user ? (
@@ -89,6 +103,18 @@ export function Navbar() {
                       {favoriteCount > 0 && (
                         <span className="ml-auto text-xs text-muted-foreground">{favoriteCount}</span>
                       )}
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/messages">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      <span>Messages</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/orders">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Package className="mr-2 h-4 w-4" />
+                      <span>Orders</span>
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/profile">

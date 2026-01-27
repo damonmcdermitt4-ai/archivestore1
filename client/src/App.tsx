@@ -11,6 +11,9 @@ import Profile from "@/pages/Profile";
 import SellerProfile from "@/pages/SellerProfile";
 import Favorites from "@/pages/Favorites";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
+import Search from "@/pages/Search";
+import Orders from "@/pages/Orders";
+import Messages from "@/pages/Messages";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +26,9 @@ function Router() {
       <Route path="/sellers/:id" component={SellerProfile} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
+      <Route path="/search" component={Search} />
+      <Route path="/orders" component={Orders} />
+      <Route path="/messages" component={Messages} />
       <Route component={NotFound} />
     </Switch>
   );
