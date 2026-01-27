@@ -30,7 +30,6 @@ export default function Sell() {
   const [uploadedImagePath, setUploadedImagePath] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [imageError, setImageError] = useState<string>("");
-  const [showInternational, setShowInternational] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { uploadFile, isUploading } = useUpload({
@@ -297,10 +296,15 @@ export default function Sell() {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-base font-semibold uppercase tracking-widest">Who Pays Shipping?</Label>
+                <Label className="text-base font-semibold uppercase tracking-widest">Shipping Options</Label>
                 <RadioGroup
                   value={form.watch("shippingPaidBy")}
-                  onValueChange={(value) => form.setValue("shippingPaidBy", value as "buyer" | "seller")}
+                  onValueChange={(value) => {
+                    form.setValue("shippingPaidBy", value as "buyer" | "seller" | "international");
+                    if (value !== "international") {
+                      form.setValue("internationalShippingPrice", undefined);
+                    }
+                  }}
                   className="grid gap-3"
                   data-testid="radio-shipping-paid-by"
                 >
@@ -314,7 +318,7 @@ export default function Sell() {
                     <RadioGroupItem value="buyer" id="shipping-buyer" data-testid="radio-shipping-buyer" />
                     <div className="flex-1">
                       <div className="font-semibold uppercase tracking-wide">Buyer Pays</div>
-                      <div className="text-sm text-muted-foreground">Shipping cost added at checkout</div>
+                      <div className="text-sm text-muted-foreground">Domestic shipping cost calculated at checkout</div>
                     </div>
                   </label>
                   <label
@@ -330,42 +334,28 @@ export default function Sell() {
                         Free Shipping
                         <Truck className="w-4 h-4" />
                       </div>
-                      <div className="text-sm text-muted-foreground">You cover shipping costs</div>
+                      <div className="text-sm text-muted-foreground">You cover domestic shipping costs</div>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                      form.watch("shippingPaidBy") === "international" 
+                        ? "border-foreground bg-secondary/50" 
+                        : "border-border hover:border-muted-foreground"
+                    }`}
+                  >
+                    <RadioGroupItem value="international" id="shipping-international" data-testid="radio-shipping-international" />
+                    <div className="flex-1">
+                      <div className="font-semibold uppercase tracking-wide flex items-center gap-2">
+                        International Only
+                        <Globe className="w-4 h-4" />
+                      </div>
+                      <div className="text-sm text-muted-foreground">Set a flat rate for international buyers</div>
                     </div>
                   </label>
                 </RadioGroup>
-              </div>
 
-              <div className="space-y-3">
-                <label
-                  className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
-                    showInternational
-                      ? "border-foreground bg-secondary/50" 
-                      : "border-border hover:border-muted-foreground"
-                  }`}
-                  data-testid="toggle-international-shipping"
-                >
-                  <input
-                    type="checkbox"
-                    checked={showInternational}
-                    onChange={(e) => {
-                      setShowInternational(e.target.checked);
-                      if (!e.target.checked) {
-                        form.setValue("internationalShippingPrice", undefined);
-                      }
-                    }}
-                    className="w-5 h-5 accent-foreground"
-                  />
-                  <div className="flex-1">
-                    <div className="font-semibold uppercase tracking-wide flex items-center gap-2">
-                      Offer International Shipping
-                      <Globe className="w-4 h-4" />
-                    </div>
-                    <div className="text-sm text-muted-foreground">Set a custom flat rate for international buyers</div>
-                  </div>
-                </label>
-
-                {showInternational && (
+                {form.watch("shippingPaidBy") === "international" && (
                   <div className="space-y-2 pl-4 border-l-2 border-foreground/20">
                     <Label htmlFor="internationalShippingPrice" className="text-sm font-medium uppercase tracking-widest">
                       International Shipping Price
@@ -376,7 +366,7 @@ export default function Sell() {
                         id="internationalShippingPrice" 
                         type="number"
                         step="0.01"
-                        min="0"
+                        min="1"
                         placeholder="35.00" 
                         {...form.register("internationalShippingPrice")}
                         className="pl-8 h-12 text-lg font-mono bg-background"
@@ -384,7 +374,7 @@ export default function Sell() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      You'll need to add tracking manually to get paid for international orders.
+                      Buyer's shipping address will be collected at checkout. You'll add tracking manually to get paid.
                     </p>
                   </div>
                 )}

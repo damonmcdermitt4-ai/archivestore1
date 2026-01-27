@@ -137,7 +137,7 @@ export const insertProductSchema = createInsertSchema(products).omit({
   brand: z.string().optional(),
   condition: z.enum(["new", "like_new", "good", "fair", "vintage"]).default("good"),
   packageSize: z.enum(["small", "medium", "large"]).default("medium"),
-  shippingPaidBy: z.enum(["buyer", "seller"]).default("buyer"),
+  shippingPaidBy: z.enum(["buyer", "seller", "international"]).default("buyer"),
   weight: z.number().min(1).max(1120).optional(), // up to 70 lbs in ounces
   internationalShippingPrice: z.number().min(0).optional(), // custom international shipping price in cents
 });

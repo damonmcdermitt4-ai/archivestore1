@@ -298,10 +298,13 @@ export async function registerRoutes(
       // Calculate shipping cost
       const packageSize = (product.packageSize as PackageSize) || "medium";
       let shippingCost = 0;
+      const isInternational = product.shippingPaidBy === "international";
       
       // If buyer pays shipping, add shipping cost
       if (product.shippingPaidBy === "buyer") {
         shippingCost = getEstimatedShippingCost(packageSize);
+      } else if (isInternational && product.internationalShippingPrice) {
+        shippingCost = product.internationalShippingPrice;
       }
 
       const platformFee = 100; // $1.00
@@ -340,8 +343,8 @@ export async function registerRoutes(
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Shipping',
-              description: `${PACKAGE_SIZES[packageSize].label} package`,
+              name: isInternational ? 'International Shipping' : 'Shipping',
+              description: isInternational ? 'Flat rate international shipping' : `${PACKAGE_SIZES[packageSize].label} package`,
             },
             unit_amount: shippingCost,
           },
@@ -355,7 +358,9 @@ export async function registerRoutes(
         line_items: lineItems,
         mode: 'payment',
         shipping_address_collection: {
-          allowed_countries: ['US'],
+          allowed_countries: isInternational 
+            ? ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'JP', 'IT', 'ES', 'NL', 'BE', 'AT', 'CH', 'SE', 'NO', 'DK', 'FI', 'IE', 'PT', 'NZ']
+            : ['US'],
         },
         success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&product_id=${productId}`,
         cancel_url: `${baseUrl}/products/${productId}`,
@@ -366,6 +371,7 @@ export async function registerRoutes(
           platformFee: String(platformFee),
           shippingCost: String(shippingCost),
           packageSize,
+          isInternational: isInternational ? 'true' : 'false',
         },
       });
 
