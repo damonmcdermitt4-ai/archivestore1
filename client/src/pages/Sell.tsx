@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Image as ImageIcon, Package, Truck, Upload } from "lucide-react";
+import { Loader2, Image as ImageIcon, Package, Truck, Upload, Globe } from "lucide-react";
 import { insertProductSchema, PACKAGE_SIZES, CONDITION_OPTIONS } from "@shared/schema";
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
@@ -30,6 +30,7 @@ export default function Sell() {
   const [uploadedImagePath, setUploadedImagePath] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [imageError, setImageError] = useState<string>("");
+  const [showInternational, setShowInternational] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { uploadFile, isUploading } = useUpload({
@@ -335,26 +336,58 @@ export default function Sell() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="internationalShippingPrice" className="text-base font-semibold uppercase tracking-widest">
-                  International Shipping Price (Optional)
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
-                  <Input 
-                    id="internationalShippingPrice" 
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="35.00" 
-                    {...form.register("internationalShippingPrice")}
-                    className="pl-8 h-12 text-lg font-mono bg-background"
-                    data-testid="input-international-shipping"
+              <div className="space-y-3">
+                <label
+                  className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                    showInternational
+                      ? "border-foreground bg-secondary/50" 
+                      : "border-border hover:border-muted-foreground"
+                  }`}
+                  data-testid="toggle-international-shipping"
+                >
+                  <input
+                    type="checkbox"
+                    checked={showInternational}
+                    onChange={(e) => {
+                      setShowInternational(e.target.checked);
+                      if (!e.target.checked) {
+                        form.setValue("internationalShippingPrice", undefined);
+                      }
+                    }}
+                    className="w-5 h-5 accent-foreground"
                   />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Set a flat rate for international buyers. You'll need to add tracking manually to get paid.
-                </p>
+                  <div className="flex-1">
+                    <div className="font-semibold uppercase tracking-wide flex items-center gap-2">
+                      Offer International Shipping
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div className="text-sm text-muted-foreground">Set a custom flat rate for international buyers</div>
+                  </div>
+                </label>
+
+                {showInternational && (
+                  <div className="space-y-2 pl-4 border-l-2 border-foreground/20">
+                    <Label htmlFor="internationalShippingPrice" className="text-sm font-medium uppercase tracking-widest">
+                      International Shipping Price
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                      <Input 
+                        id="internationalShippingPrice" 
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="35.00" 
+                        {...form.register("internationalShippingPrice")}
+                        className="pl-8 h-12 text-lg font-mono bg-background"
+                        data-testid="input-international-shipping"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      You'll need to add tracking manually to get paid for international orders.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
